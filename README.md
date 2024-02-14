@@ -1,3 +1,11 @@
+# Fork reason
+
+This is a temporary workaround for https://github.com/segment-integrations/analytics-swift-amplitude/issues/16
+
+Use this Segment plugin in parallele with Amplitude iOS Sdk setup for session event tracking only. 
+And give the sessionId to the segment plugin using the provider.
+
+
 # Analytics-Swift Amplitude
 
 Add Amplitude session tracking support to your applications via this plugin for [Analytics-Swift](https://github.com/segmentio/analytics-swift)
