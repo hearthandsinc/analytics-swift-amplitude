@@ -40,7 +40,7 @@ public class ObjCAmplitudeSession: NSObject, ObjCPlugin, ObjCPluginShim {
 /// This is to allow to have Amplitude SDK in parallele monitoring session id events
 ///
 /// Temporary workaround for https://github.com/segment-integrations/analytics-swift-amplitude/issues/16
-public typealias SessionIDProvider = () -> TimeInterval?
+public typealias SessionIDProvider = () -> Int64?
 
 public class AmplitudeSession: EventPlugin, iOSLifecycle {
     public var key = "Actions Amplitude"
@@ -49,7 +49,7 @@ public class AmplitudeSession: EventPlugin, iOSLifecycle {
     
     var active = false
     
-    private var sessionID: TimeInterval?
+    private var sessionID: Int64?
     private var lastEventFiredTime = Date()
     private var minSessionTime: TimeInterval = 5 * 60
     
@@ -58,7 +58,7 @@ public class AmplitudeSession: EventPlugin, iOSLifecycle {
     public init(sessionIDProvider: SessionIDProvider? = nil) {
         if (sessionID == nil || sessionID == -1)
         {
-            sessionID = sessionIDProvider?() ?? Date().timeIntervalSince1970
+            sessionID = (Int64(Date().timeIntervalSince1970) * 1000)
         }
         self.sessionIDProvider = sessionIDProvider
     }
@@ -145,7 +145,7 @@ public class AmplitudeSession: EventPlugin, iOSLifecycle {
         if let sessionIDProvider = sessionIDProvider {
             sessionID = sessionIDProvider()
         } else if Date().timeIntervalSince(lastEventFiredTime) >= minSessionTime {
-            sessionID = Date().timeIntervalSince1970
+            sessionID = (Int64(Date().timeIntervalSince1970) * 1000)
         }
         
         analytics?.log(message: "Amplitude Session ID: \(sessionID ?? -1)")
@@ -165,7 +165,7 @@ extension AmplitudeSession {
         if var integrations = event.integrations?.dictionaryValue,
            let sessionID = sessionIDProvider?() ?? sessionID {
 
-            integrations[key] = ["session_id": (Int(sessionID) * 1000)]
+            integrations[key] = ["session_id": sessionID]
             returnEvent.integrations = try? JSON(integrations as Any)
         }
         return returnEvent
