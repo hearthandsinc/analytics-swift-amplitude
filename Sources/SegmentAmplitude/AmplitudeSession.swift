@@ -35,6 +35,13 @@ public class ObjCAmplitudeSession: NSObject, ObjCPlugin, ObjCPluginShim {
     public func instance() -> EventPlugin { return AmplitudeSession() }
 }
 
+
+/// Letting the user provide their own session ID
+/// This is to allow to have Amplitude SDK in parallele monitoring session id events
+///
+/// Temporary workaround for https://github.com/segment-integrations/analytics-swift-amplitude/issues/16
+public typealias SessionIDProvider = () -> TimeInterval?
+
 public class AmplitudeSession: EventPlugin, iOSLifecycle {
     public var key = "Actions Amplitude"
     public var type = PluginType.enrichment
@@ -46,11 +53,14 @@ public class AmplitudeSession: EventPlugin, iOSLifecycle {
     private var lastEventFiredTime = Date()
     private var minSessionTime: TimeInterval = 5 * 60
     
-    public init() {
+    private let sessionIDProvider: SessionIDProvider?
+
+    public init(sessionIDProvider: SessionIDProvider? = nil) {
         if (sessionID == nil || sessionID == -1)
         {
-            sessionID = Date().timeIntervalSince1970
+            sessionID = sessionIDProvider?() ?? Date().timeIntervalSince1970
         }
+        self.sessionIDProvider = sessionIDProvider
     }
     
     public func update(settings: Settings, type: UpdateType) {
@@ -132,7 +142,9 @@ public class AmplitudeSession: EventPlugin, iOSLifecycle {
     }
     
     public func applicationWillEnterForeground(application: UIApplication?) {
-        if Date().timeIntervalSince(lastEventFiredTime) >= minSessionTime {
+        if let sessionIDProvider = sessionIDProvider {
+            sessionID = sessionIDProvider()
+        } else if Date().timeIntervalSince(lastEventFiredTime) >= minSessionTime {
             sessionID = Date().timeIntervalSince1970
         }
         
@@ -151,8 +163,8 @@ extension AmplitudeSession {
     func insertSession(event: RawEvent) -> RawEvent {
         var returnEvent = event
         if var integrations = event.integrations?.dictionaryValue,
-           let sessionID = sessionID {
-            
+           let sessionID = sessionIDProvider?() ?? sessionID {
+
             integrations[key] = ["session_id": (Int(sessionID) * 1000)]
             returnEvent.integrations = try? JSON(integrations as Any)
         }
