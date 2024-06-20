@@ -1,3 +1,10 @@
+# Fork Reason
+
+Amplitude Application [Installed/Opened/Backgrounded] were not forwarded to amplitude anymore
+
+See issue https://github.com/segment-integrations/analytics-swift-amplitude/issues/25 
+
+
 # Analytics-Swift Amplitude
 
 Add Amplitude session tracking support to your applications via this plugin for [Analytics-Swift](https://github.com/segmentio/analytics-swift)
